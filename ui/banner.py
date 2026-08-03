@@ -26,5 +26,5 @@ def build_banner() -> Panel:
         Align.center(title),
         title=f"v{VERSION}",
         border_style=PRIMARY,
-        padding=(1, 2),
+        padding=(0, 2),
     )

@@ -30,6 +30,30 @@ def ask_int(message: str) -> int:
         console.print("[red]Please enter a valid number.[/red]")
 
 
+def ask_choice(name: str, options: list[str]) -> str:
+    """
+    Ask user to select an option by number from a list.
+    """
+    if name.endswith("y"):
+        plural = name[:-1] + "ies"
+    elif name.endswith("s"):
+        plural = name + "es"
+    else:
+        plural = name + "s"
+        
+    console.print(f"\n[cyan]Available {plural}:[/cyan]")
+    for i, opt in enumerate(options, 1):
+        console.print(f"  [white]{i}. {opt}[/white]")
+        
+    while True:
+        value = Prompt.ask(f"Enter {name} number").strip()
+        if value.isdigit():
+            idx = int(value) - 1
+            if 0 <= idx < len(options):
+                return options[idx]
+        console.print("[red]Invalid choice. Please enter a valid number from the list.[/red]")
+
+
 def ask_yes_no(message: str) -> bool:
     """
     Ask yes/no confirmation.

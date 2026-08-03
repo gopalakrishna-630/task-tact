@@ -57,10 +57,11 @@ class SearchService:
         """
         Search tasks by category.
         """
+        keyword = category.strip().lower()
         return [
             task
             for task in load_tasks()
-            if task.category.lower() == category.lower()
+            if keyword in task.category.lower()
         ]
 
     @staticmethod
@@ -68,10 +69,11 @@ class SearchService:
         """
         Search tasks by priority.
         """
+        keyword = priority.strip().lower()
         return [
             task
             for task in load_tasks()
-            if task.priority.lower() == priority.lower()
+            if keyword in task.priority.lower()
         ]
 
     @staticmethod
@@ -79,10 +81,11 @@ class SearchService:
         """
         Search tasks by status.
         """
+        keyword = status.strip().lower()
         return [
             task
             for task in load_tasks()
-            if task.status.lower() == status.lower()
+            if keyword in task.status.lower()
         ]
 
     @staticmethod
@@ -95,7 +98,7 @@ class SearchService:
         return [
             task
             for task in load_tasks()
-            if any(keyword == t.lower() for t in task.tags)
+            if any(keyword in t.lower() for t in task.tags)
         ]
 
     @staticmethod
@@ -103,10 +106,11 @@ class SearchService:
         """
         Search tasks by deadline.
         """
+        keyword = deadline.strip().lower()
         return [
             task
             for task in load_tasks()
-            if task.deadline == deadline
+            if keyword in task.deadline.lower()
         ]
 
     @staticmethod

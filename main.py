@@ -5,7 +5,7 @@ from rich.table import Table
 from datetime import datetime
 
 from ui.layout import create_layout
-from ui.input import ask, ask_yes_no, pause
+from ui.input import ask, ask_int, ask_yes_no, pause, ask_choice
 from ui.tables import build_task_table
 from ui.dialogs import success, error, warning, info
 
@@ -38,12 +38,10 @@ class App:
         if choice == "1":
             self.set_menu("Task Menu", menus.TASK_MENU)
         elif choice == "2":
-            self.set_menu("Search Menu", menus.SEARCH_MENU)
+            self.set_menu("Search & Filter Menu", menus.SEARCH_FILTER_MENU)
         elif choice == "3":
-            self.set_menu("Filter Menu", menus.FILTER_MENU)
-        elif choice == "4":
             self.set_menu("Report Menu", menus.REPORT_MENU)
-        elif choice == "5":
+        elif choice == "4":
             self.set_menu("Settings Menu", menus.SETTINGS_MENU)
         elif choice == "0":
             console.print("\nGoodbye!\n")
@@ -61,19 +59,9 @@ class App:
             
             description = ask("Description")
             
-            console.print(f"Categories: {', '.join(CATEGORIES)}")
-            category = ""
-            while category not in CATEGORIES:
-                category = ask("Category")
-                if category not in CATEGORIES:
-                    console.print("[red]Invalid Category. Please try again.[/red]")
+            category = ask_choice("Category", CATEGORIES)
                 
-            console.print(f"Priorities: {', '.join(PRIORITIES)}")
-            priority = ""
-            while priority not in PRIORITIES:
-                priority = ask("Priority (High/Medium/Low)")
-                if priority not in PRIORITIES:
-                    console.print("[red]Invalid Priority. Please try again.[/red]")
+            priority = ask_choice("Priority", PRIORITIES)
                 
             deadline = ""
             while True:
@@ -111,17 +99,23 @@ class App:
             title = ask(f"Title [{task.title}]") or task.title
             description = ask(f"Description [{task.description}]") or task.description
             
-            while True:
-                category = ask(f"Category [{task.category}]") or task.category
-                if category in CATEGORIES:
-                    break
-                console.print("[red]Invalid Category. Please try again.[/red]")
+            new_category_idx = ask(f"Category [{task.category}] (leave blank to keep current, or 'list' to choose)")
+            if new_category_idx.strip().lower() == 'list':
+                category = ask_choice("Category", CATEGORIES)
+            else:
+                while new_category_idx and new_category_idx not in CATEGORIES:
+                    console.print("[red]Invalid Category. Enter exactly or 'list' to choose.[/red]")
+                    new_category_idx = ask(f"Category [{task.category}]")
+                category = new_category_idx or task.category
                 
-            while True:
-                priority = ask(f"Priority [{task.priority}]") or task.priority
-                if priority in PRIORITIES:
-                    break
-                console.print("[red]Invalid Priority. Please try again.[/red]")
+            new_priority_idx = ask(f"Priority [{task.priority}] (leave blank to keep current, or 'list' to choose)")
+            if new_priority_idx.strip().lower() == 'list':
+                priority = ask_choice("Priority", PRIORITIES)
+            else:
+                while new_priority_idx and new_priority_idx not in PRIORITIES:
+                    console.print("[red]Invalid Priority. Enter exactly or 'list' to choose.[/red]")
+                    new_priority_idx = ask(f"Priority [{task.priority}]")
+                priority = new_priority_idx or task.priority
                 
             while True:
                 deadline = ask(f"Deadline [{task.deadline}]") or task.deadline
@@ -159,64 +153,29 @@ class App:
         else:
             self.content = error("Invalid Choice")
 
-    def handle_search_menu(self, choice: str) -> None:
+    def handle_search_filter_menu(self, choice: str) -> None:
         tasks = []
         if choice == "1":
-            val = ask("Enter Task ID")
-            task = SearchService.by_id(val)
-            if task:
-                tasks = [task]
+            val = ask("Enter keyword for global search")
+            tasks = SearchService.search_all(val)
         elif choice == "2":
-            val = ask("Enter Title keyword")
-            tasks = SearchService.by_title(val)
-        elif choice == "3":
-            val = ask("Enter Description keyword")
-            tasks = SearchService.by_description(val)
-        elif choice == "4":
-            val = ask("Enter Category")
-            tasks = SearchService.by_category(val)
-        elif choice == "5":
-            val = ask("Enter Priority")
-            tasks = SearchService.by_priority(val)
-        elif choice == "6":
-            val = ask("Enter Status")
-            tasks = SearchService.by_status(val)
-        elif choice == "7":
-            val = ask("Enter Tag")
-            tasks = SearchService.by_tag(val)
-        elif choice == "0":
-            self.set_menu("Main Menu", menus.MAIN_MENU)
-            return
-        else:
-            self.content = error("Invalid Choice")
-            return
-            
-        if tasks:
-            self.content = build_task_table(tasks)
-        else:
-            if choice in [str(i) for i in range(1, 8)]:
-                self.content = warning("No tasks found.")
-
-    def handle_filter_menu(self, choice: str) -> None:
-        tasks = []
-        if choice == "1":
-            val = ask("Enter Category")
+            val = ask_choice("Category", CATEGORIES)
             tasks = FilterService.by_category(val)
-        elif choice == "2":
-            val = ask("Enter Priority")
-            tasks = FilterService.by_priority(val)
         elif choice == "3":
-            val = ask("Enter Status")
-            tasks = FilterService.by_status(val)
+            val = ask_choice("Priority", PRIORITIES)
+            tasks = FilterService.by_priority(val)
         elif choice == "4":
-            tasks = FilterService.completed()
+            val = ask_choice("Status", STATUS)
+            tasks = FilterService.by_status(val)
         elif choice == "5":
-            tasks = FilterService.pending()
+            tasks = FilterService.completed()
         elif choice == "6":
-            tasks = FilterService.overdue()
+            tasks = FilterService.pending()
         elif choice == "7":
-            tasks = FilterService.due_today()
+            tasks = FilterService.overdue()
         elif choice == "8":
+            tasks = FilterService.due_today()
+        elif choice == "9":
             tasks = FilterService.due_this_week()
         elif choice == "0":
             self.set_menu("Main Menu", menus.MAIN_MENU)
@@ -228,8 +187,8 @@ class App:
         if tasks:
             self.content = build_task_table(tasks)
         else:
-            if choice in [str(i) for i in range(1, 9)]:
-                self.content = warning("No tasks found matching filter.")
+            if choice in [str(i) for i in range(1, 10)]:
+                self.content = warning("No tasks found matching criteria.")
 
     def handle_report_menu(self, choice: str) -> None:
         if choice == "1":
@@ -318,10 +277,8 @@ class App:
                     self.handle_main_menu(choice)
                 elif self.menu_title == "Task Menu":
                     self.handle_task_menu(choice)
-                elif self.menu_title == "Search Menu":
-                    self.handle_search_menu(choice)
-                elif self.menu_title == "Filter Menu":
-                    self.handle_filter_menu(choice)
+                elif self.menu_title == "Search & Filter Menu":
+                    self.handle_search_filter_menu(choice)
                 elif self.menu_title == "Report Menu":
                     self.handle_report_menu(choice)
                 elif self.menu_title == "Settings Menu":

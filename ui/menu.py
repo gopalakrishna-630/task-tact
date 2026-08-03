@@ -28,5 +28,5 @@ def build_menu(title: str, menu_items: list[dict]) -> Panel:
         table,
         title=title,
         border_style=PRIMARY,
-        padding=(1, 2),
+        padding=(0, 1),
     )

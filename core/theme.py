@@ -66,8 +66,8 @@ DASHBOARD_ICONS = {
 # Layout
 # ==========================
 
-HEADER_SIZE = 8
-DASHBOARD_SIZE = 8
+HEADER_SIZE = 4
+DASHBOARD_SIZE = 5
 FOOTER_SIZE = 3
 
 LEFT_RATIO = 2
